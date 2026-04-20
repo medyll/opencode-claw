@@ -1,26 +1,26 @@
 project_name: opencode-claw
-phase: complete
-progress: 100
+phase: in-progress
+progress: 60
 active_role: Developer
 
 marketing:
-  - CodeClaw: orchestrateur visuel pour opencode avec dashboard projets
-  - Interface unique pour gérer plusieurs projets et executions
-  - Kill switch direct pour contrôle total
+  - CodeClaw: orchestrateur SDK pour opencode — contrôle sans iframe
+  - Liste de projets + zone TUI par projet via @opencode-ai/sdk
+  - Interface sur mesure au dessus d'opencode
 
 product:
-  - Dashboard liste projets avec statuts en temps réel
-  - Execution queue configurable par projet
-  - Historique des sessions et résultats par date
+  - Sidebar projets cliquables → espace projet dédié
+  - Zone TUI gauche: prompt + streaming via SDK
+  - Zone info droite: placeholder (sprint 3)
 
 far_vision:
   - Remplacer complètement l'UI opencode par une interface sur mesure
   - Support multi-agents avec priorisation intelligente
   - Intégration native des skills et workflows ferule
 
-next_action: MVP complet — prêt pour tests utilisateur
-next_command: bmad-status
-next_role: null
+next_action: Sprint 2 validé — démarrer Sprint 3 (zone info + améliorations TUI)
+next_command: bmad-sprint
+next_role: Scrum Master
 
 sprints:
   - number: 1
@@ -58,7 +58,27 @@ sprints:
         test_output: bmad/artifacts/test-report-S1-05.md
         test_result: pass
 
+  - number: 2
+    goal: SDK integration — no iframe, TUI par projet
+    status: complete
+    stories:
+      - id: S2-01
+        title: Install @opencode-ai/sdk + proxy routes Express
+        status: complete
+      - id: S2-02
+        title: UI — layout projet (2 colonnes TUI + info)
+        status: complete
+      - id: S2-03
+        title: TUI zone — prompt input + streaming SSE
+        status: complete
+        tests_executed: true
+        test_output: Playwright — screenshot test-02-project-clicked.png
+        test_result: pass
+
 artifacts:
   - name: plan-opencode-claw.md
     path: sources/plan-opencode-claw.md
     type: prd
+  - name: README.md
+    path: artifacts/docs/README.md
+    type: doc

@@ -2,6 +2,11 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import routesSdk from './routes/routesSdk';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // --- Types ---
 
@@ -46,7 +51,7 @@ const app = express();
 const PORT = Number(process.env.PORT ?? 3000);
 const OPENCODE_URL = process.env.OPENCODE_URL ?? 'http://localhost:4096';
 const CSS_BASE_PATH = process.env.CSS_BASE_PATH
-  ?? path.join(__dirname, '../../node_modules/@medyll/css-base/dist');
+  ?? path.join(__dirname, '../node_modules/@medyll/css-base/dist');
 const DATA_DIR = path.join(__dirname, 'data');
 const PROJECTS_FILE = path.join(DATA_DIR, 'projects.json');
 const QUEUE_FILE = path.join(DATA_DIR, 'queue.json');
@@ -55,6 +60,7 @@ const EXECUTIONS_FILE = path.join(DATA_DIR, 'executions.json');
 app.use(express.json());
 app.use('/css-base', express.static(CSS_BASE_PATH));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use('/api/oc', routesSdk);
 
 // --- Persistence ---
 
@@ -242,6 +248,18 @@ app.post('/api/projects', (req, res) => {
   data.projects.push(newProject);
   writeJSON(PROJECTS_FILE, data);
   res.status(201).json(newProject);
+});
+
+app.delete('/api/projects/:id', (req, res) => {
+  const { id } = req.params;
+  const data = readJSON<ProjectsFile>(PROJECTS_FILE) ?? { projects: [] };
+  const before = data.projects.length;
+  data.projects = data.projects.filter(p => p.id !== id);
+  if (data.projects.length === before) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+  writeJSON(PROJECTS_FILE, data);
+  res.status(204).end();
 });
 
 app.get('/api/queue', (req, res) => {

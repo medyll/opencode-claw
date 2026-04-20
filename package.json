@@ -2,9 +2,10 @@
   "name": "@medyll/opencode-claw",
   "version": "1.0.0",
   "description": "CodeClaw — Orchestrateur léger pour opencode avec dashboard et execution queue",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node src/server.ts",
+    "dev": "tsx src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },
@@ -17,6 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "@medyll/css-base": "^0.6.0",
+    "@opencode-ai/sdk": "^1.14.19",
     "express": "^5.2.1",
     "send": "^1.2.1"
   },
@@ -24,6 +26,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.6.3"
   }
 }
