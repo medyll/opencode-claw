@@ -1,0 +1,64 @@
+project_name: opencode-claw
+phase: complete
+progress: 100
+active_role: Developer
+
+marketing:
+  - CodeClaw: orchestrateur visuel pour opencode avec dashboard projets
+  - Interface unique pour gérer plusieurs projets et executions
+  - Kill switch direct pour contrôle total
+
+product:
+  - Dashboard liste projets avec statuts en temps réel
+  - Execution queue configurable par projet
+  - Historique des sessions et résultats par date
+
+far_vision:
+  - Remplacer complètement l'UI opencode par une interface sur mesure
+  - Support multi-agents avec priorisation intelligente
+  - Intégration native des skills et workflows ferule
+
+next_action: MVP complet — prêt pour tests utilisateur
+next_command: bmad-status
+next_role: null
+
+sprints:
+  - number: 1
+    goal: Phase 1-4 — MVP complet CodeClaw
+    status: complete
+    stories:
+      - id: S1-01
+        title: Initialisation projet Node/TS + serveur Express
+        status: complete
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-S1-01.md
+        test_result: pass
+      - id: S1-02
+        title: Route "/" avec iframe opencode + intégration css-base
+        status: complete
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-S1-02.md
+        test_result: pass
+      - id: S1-03
+        title: Project registry — API /api/projects + UI dashboard
+        status: complete
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-S1-03.md
+        test_result: pass
+      - id: S1-04
+        title: Execution queue runner — Start/Stop + execution auto
+        status: complete
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-S1-04.md
+        test_result: pass
+      - id: S1-05
+        title: Dashboard résultats + historique des executions
+        status: complete
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-S1-05.md
+        test_result: pass
+
+artifacts:
+  - name: plan-opencode-claw.md
+    path: sources/plan-opencode-claw.md
+    type: prd

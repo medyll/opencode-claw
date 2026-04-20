@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>codeclaw — test embed</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: monospace; 
+      background: #0d1117; 
+      color: #c9d1d9;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 12px 20px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header h1 { font-size: 14px; color: #58a6ff; letter-spacing: 2px; }
+    #status { font-size: 12px; color: #8b949e; }
+    #status.ok { color: #3fb950; }
+    #status.fail { color: #f85149; }
+    .container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    iframe {
+      flex: 1;
+      border: none;
+      background: #fff;
+    }
+    #fallback {
+      display: none;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      color: #f85149;
+      font-size: 13px;
+    }
+    #fallback a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>codeclaw</h1>
+    <span id="status">chargement opencode...</span>
+  </header>
+  <div class="container">
+    <iframe 
+      id="oc-frame"
+      src="http://localhost:4096"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+      title="opencode"
+    ></iframe>
+    <div id="fallback">
+      <span>iframe bloqué — CORS ou X-Frame-Options</span>
+      <a href="http://localhost:4096" target="_blank">→ ouvrir opencode dans un nouvel onglet</a>
+    </div>
+  </div>
+
+  <script>
+    const frame = document.getElementById('oc-frame');
+    const status = document.getElementById('status');
+    const fallback = document.getElementById('fallback');
+
+    frame.addEventListener('load', () => {
+      try {
+        // Si on peut accéder au contenu, l'embed passe
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        if (doc && doc.body) {
+          status.textContent = '✓ embed ok — opencode chargé';
+          status.className = 'ok';
+        }
+      } catch(e) {
+        // Cross-origin bloqué mais la page a quand même chargé
+        status.textContent = '✓ embed ok (cross-origin — contenu visible ?)';
+        status.className = 'ok';
+      }
+    });
+
+    frame.addEventListener('error', () => {
+      status.textContent = '✗ embed bloqué';
+      status.className = 'fail';
+      frame.style.display = 'none';
+      fallback.style.display = 'flex';
+    });
+
+    // Timeout — si rien ne se passe en 5s
+    setTimeout(() => {
+      if (!status.className) {
+        status.textContent = '? timeout — vérifie manuellement';
+        status.className = 'fail';
+      }
+    }, 5000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeClaw — Orchestrateur Opencode</title>
+  <link rel="stylesheet" href="/css-base/app.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: var(--font-mono, monospace); 
+      background: var(--color-bg, #0d1117); 
+      color: var(--color-text, #c9d1d9);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      padding: 12px 20px;
+      background: var(--color-surface, #161b22);
+      border-bottom: 1px solid var(--color-border, #30363d);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    header h1 { 
+      font-size: 14px; 
+      color: var(--color-primary, #58a6ff); 
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .status-bar {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-muted, #8b949e);
+    }
+    .status-dot.ok { background: var(--color-success, #3fb950); }
+    .status-dot.fail { background: var(--color-danger, #f85149); }
+    .status-dot.running { background: var(--color-warning, #d29922); animation: pulse 1.5s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .main-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 320px;
+      background: var(--color-surface, #161b22);
+      border-right: 1px solid var(--color-border, #30363d);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .sidebar-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--color-border, #30363d);
+    }
+    .sidebar-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--color-muted, #8b949e);
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .project-item, .queue-item {
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background: var(--color-bg, #0d1117);
+      border: 1px solid var(--color-border, #30363d);
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .project-item:hover, .queue-item:hover {
+      border-color: var(--color-primary, #58a6ff);
+    }
+    .project-name {
+      font-weight: 600;
+      color: var(--color-text, #c9d1d9);
+      margin-bottom: 4px;
+    }
+    .project-path {
+      font-size: 11px;
+      color: var(--color-muted, #8b949e);
+      margin-bottom: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .project-status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .project-status.active {
+      background: rgba(63, 185, 80, 0.2);
+      color: var(--color-success, #3fb950);
+    }
+    .project-status.paused {
+      background: rgba(210, 153, 34, 0.2);
+      color: var(--color-warning, #d29922);
+    }
+    .project-status.running {
+      background: rgba(210, 153, 34, 0.3);
+      color: var(--color-warning, #d29922);
+      animation: pulse-bg 1.5s infinite;
+    }
+    @keyframes pulse-bg {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .project-status.error {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--color-danger, #f85149);
+    }
+    .btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      border: 1px solid var(--color-border, #30363d);
+      background: var(--color-surface, #161b22);
+      color: var(--color-text, #c9d1d9);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: var(--color-border, #30363d);
+    }
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+    .btn-primary {
+      background: var(--color-primary, #58a6ff);
+      color: #0d1117;
+      border-color: var(--color-primary, #58a6ff);
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-hover, #79c0ff);
+    }
+    .btn-danger {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--color-danger, #f85149);
+      border-color: var(--color-danger, #f85149);
+    }
+    .btn-danger:hover {
+      background: var(--color-danger, #f85149);
+      color: #fff;
+    }
+    .btn-success {
+      background: rgba(63, 185, 80, 0.2);
+      color: var(--color-success, #3fb950);
+      border-color: var(--color-success, #3fb950);
+    }
+    .btn-success:hover {
+      background: var(--color-success, #3fb950);
+      color: #fff;
+    }
+    .queue-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border, #30363d);
+    }
+    .runner-status {
+      padding: 8px 12px;
+      margin-top: 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      text-align: center;
+    }
+    .runner-status.idle {
+      background: rgba(139, 148, 158, 0.2);
+      color: var(--color-muted, #8b949e);
+    }
+    .runner-status.running {
+      background: rgba(210, 153, 34, 0.2);
+      color: var(--color-warning, #d29922);
+    }
+    iframe {
+      flex: 1;
+      border: none;
+      background: #fff;
+    }
+    #fallback {
+      display: none;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      color: var(--color-danger, #f85149);
+      font-size: 13px;
+      padding: 40px;
+      text-align: center;
+    }
+    #fallback a {
+      color: var(--color-primary, #58a6ff);
+      text-decoration: none;
+    }
+    .add-project-form {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border, #30363d);
+    }
+    .form-input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: var(--color-bg, #0d1117);
+      border: 1px solid var(--color-border, #30363d);
+      border-radius: 4px;
+      color: var(--color-text, #c9d1d9);
+      font-size: 12px;
+      font-family: inherit;
+    }
+    .form-input::placeholder {
+      color: var(--color-muted, #8b949e);
+    }
+    .empty-state {
+      font-size: 12px;
+      color: var(--color-muted, #8b949e);
+      text-align: center;
+      padding: 20px 10px;
+    }
+    .log-panel {
+      height: 180px;
+      background: var(--color-bg, #0d1117);
+      border-top: 1px solid var(--color-border, #30363d);
+      padding: 12px;
+      overflow-y: auto;
+      font-size: 11px;
+      font-family: monospace;
+    }
+    .log-entry {
+      margin-bottom: 4px;
+      color: var(--color-muted, #8b949e);
+    }
+    .log-entry.info { color: var(--color-text, #c9d1d9); }
+    .log-entry.success { color: var(--color-success, #3fb950); }
+    .log-entry.error { color: var(--color-danger, #f85149); }
+    .log-entry.running { color: var(--color-warning, #d29922); }
+    .history-panel {
+      height: 200px;
+      background: var(--color-bg, #0d1117);
+      border-top: 1px solid var(--color-border, #30363d);
+      display: flex;
+      flex-direction: column;
+    }
+    .history-header {
+      padding: 8px 12px;
+      background: var(--color-surface, #161b22);
+      border-bottom: 1px solid var(--color-border, #30363d);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .history-stats {
+      display: flex;
+      gap: 12px;
+      font-size: 10px;
+    }
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .stat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .stat-dot.success { background: var(--color-success, #3fb950); }
+    .stat-dot.error { background: var(--color-danger, #f85149); }
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .history-item {
+      padding: 6px 10px;
+      margin-bottom: 4px;
+      border-radius: 4px;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--color-surface, #161b22);
+    }
+    .history-item.success { border-left: 3px solid var(--color-success, #3fb950); }
+    .history-item.error { border-left: 3px solid var(--color-danger, #f85149); }
+    .history-time {
+      color: var(--color-muted, #8b949e);
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CodeClaw</h1>
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-dot" id="server-status"></span>
+        <span id="server-text">Serveur...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-dot" id="runner-status"></span>
+        <span id="runner-text">Runner...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-dot" id="opencode-status"></span>
+        <span id="opencode-text">Opencode...</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">
+          Execution Queue
+          <span id="queue-count" style="font-size: 10px; background: var(--color-primary); color: #0d1117; padding: 2px 6px; border-radius: 10px;">0</span>
+        </div>
+        <div id="queue-list">
+          <p class="empty-state">Aucun projet en file d'attente</p>
+        </div>
+        <div class="queue-controls">
+          <button class="btn btn-sm btn-success" id="start-runner-btn" style="flex: 1">▶ Démarrer</button>
+          <button class="btn btn-sm btn-danger" id="stop-runner-btn" style="flex: 1" disabled>■ Stop</button>
+        </div>
+        <div id="runner-status-panel" class="runner-status idle">
+          Runner à l'arrêt
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <div class="sidebar-title">Projets</div>
+        <div id="projects-list">
+          <p class="empty-state">Aucun projet enregistré</p>
+        </div>
+        
+        <div class="add-project-form">
+          <input type="text" id="project-name" class="form-input" placeholder="Nom du projet">
+          <input type="text" id="project-path" class="form-input" placeholder="Chemin complet">
+          <input type="text" id="project-desc" class="form-input" placeholder="Description (optionnel)">
+          <button class="btn btn-primary" style="width: 100%" id="add-project-btn">Ajouter le projet</button>
+        </div>
+      </div>
+    </aside>
+    
+    <iframe 
+      id="oc-frame"
+      src="http://localhost:4096"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+      title="opencode"
+    ></iframe>
+    
+    <div id="fallback">
+      <h2>⚠ Iframe bloquée</h2>
+      <p>L'embed opencode n'a pas pu se charger (CORS ou X-Frame-Options)</p>
+      <a href="http://localhost:4096" target="_blank" class="btn btn-primary">→ Ouvrir Opencode dans un nouvel onglet</a>
+    </div>
+  </div>
+
+  <div class="history-panel">
+    <div class="history-header">
+      <span>📊 Historique des exécutions — Aujourd'hui</span>
+      <div class="history-stats">
+        <span class="stat"><span class="stat-dot success"></span> <span id="stat-success">0</span> succès</span>
+        <span class="stat"><span class="stat-dot error"></span> <span id="stat-error">0</span> erreurs</span>
+        <span class="stat">Total: <span id="stat-total">0</span></span>
+      </div>
+    </div>
+    <div class="history-list" id="history-list">
+      <p class="empty-state">Aucune exécution aujourd'hui</p>
+    </div>
+  </div>
+
+  <div class="log-panel" id="log-panel">
+    <div class="log-entry info">[CodeClaw] Initialisé</div>
+  </div>
+
+  <script>
+    const frame = document.getElementById('oc-frame');
+    const serverStatus = document.getElementById('server-status');
+    const serverText = document.getElementById('server-text');
+    const runnerStatus = document.getElementById('runner-status');
+    const runnerText = document.getElementById('runner-text');
+    const opencodeStatus = document.getElementById('opencode-status');
+    const opencodeText = document.getElementById('opencode-text');
+    const fallback = document.getElementById('fallback');
+    const queueList = document.getElementById('queue-list');
+    const projectsList = document.getElementById('projects-list');
+    const addProjectBtn = document.getElementById('add-project-btn');
+    const startRunnerBtn = document.getElementById('start-runner-btn');
+    const stopRunnerBtn = document.getElementById('stop-runner-btn');
+    const runnerStatusPanel = document.getElementById('runner-status-panel');
+    const queueCount = document.getElementById('queue-count');
+    const logPanel = document.getElementById('log-panel');
+    const historyList = document.getElementById('history-list');
+    const statSuccess = document.getElementById('stat-success');
+    const statError = document.getElementById('stat-error');
+    const statTotal = document.getElementById('stat-total');
+
+    function esc(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function log(message, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      const time = new Date().toLocaleTimeString();
+      entry.textContent = `[${time}] ${message}`;
+      logPanel.appendChild(entry);
+      logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    async function checkServer() {
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        serverStatus.className = 'status-dot ok';
+        serverText.textContent = `OK — ${data.service}`;
+        log('Serveur connecté', 'success');
+      } catch (e) {
+        serverStatus.className = 'status-dot fail';
+        serverText.textContent = 'Erreur serveur';
+        log('Erreur connexion serveur', 'error');
+      }
+    }
+
+    function checkOpencode() {
+      frame.addEventListener('load', () => {
+        try {
+          const doc = frame.contentDocument || frame.contentWindow.document;
+          if (doc && doc.body) {
+            opencodeStatus.className = 'status-dot ok';
+            opencodeText.textContent = '✓ Opencode chargé';
+            log('Opencode chargé dans l\'iframe', 'success');
+          }
+        } catch(e) {
+          opencodeStatus.className = 'status-dot ok';
+          opencodeText.textContent = '✓ Opencode (cross-origin)';
+          log('Opencode chargé (cross-origin)', 'info');
+        }
+      });
+
+      frame.addEventListener('error', () => {
+        opencodeStatus.className = 'status-dot fail';
+        opencodeText.textContent = '✗ Bloqué';
+        frame.style.display = 'none';
+        fallback.style.display = 'flex';
+        log('Erreur chargement iframe', 'error');
+      });
+
+      setTimeout(() => {
+        if (!opencodeStatus.className) {
+          opencodeStatus.className = 'status-dot fail';
+          opencodeText.textContent = '? Timeout';
+          log('Timeout chargement opencode', 'error');
+        }
+      }, 5000);
+    }
+
+    async function loadProjects() {
+      try {
+        const res = await fetch('/api/projects');
+        const data = await res.json();
+        
+        if (data.projects && data.projects.length > 0) {
+          projectsList.innerHTML = data.projects.map(p => `
+            <div class="project-item" data-id="${esc(p.id)}">
+              <div class="project-name">${esc(p.name)}</div>
+              <div class="project-path">${esc(p.path)}</div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="project-status ${esc(p.status)}">${esc(p.status)}</span>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn btn-sm" onclick="addToQueue('${esc(p.id)}')">+ Queue</button>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          projectsList.innerHTML = '<p class="empty-state">Aucun projet enregistré</p>';
+        }
+      } catch (e) {
+        console.error('Failed to load projects:', e);
+      }
+    }
+
+    async function loadQueue() {
+      try {
+        const res = await fetch('/api/queue');
+        const data = await res.json();
+        
+        if (data.queue && data.queue.length > 0) {
+          queueCount.textContent = data.queue.length;
+          const projectsRes = await fetch('/api/projects');
+          const projectsData = await projectsRes.json();
+          const projectMap = {};
+          (projectsData.projects || []).forEach(p => {
+            projectMap[p.id] = p;
+          });
+          
+          queueList.innerHTML = data.queue.map(id => {
+            const p = projectMap[id];
+            return p ? `
+              <div class="queue-item" data-id="${esc(id)}">
+                <div class="project-name">${esc(p.name)}</div>
+                <div class="project-path">${esc(p.path)}</div>
+                <button class="btn btn-sm btn-danger" onclick="removeFromQueue('${esc(id)}')" style="margin-top: 6px; width: 100%">Retirer</button>
+              </div>
+            ` : '';
+          }).join('');
+        } else {
+          queueList.innerHTML = '<p class="empty-state">Aucun projet en file d'attente</p>';
+          queueCount.textContent = '0';
+        }
+        
+        if (data.running) {
+          runnerStatus.className = 'status-dot running';
+          runnerText.textContent = 'En cours...';
+          runnerStatusPanel.className = 'runner-status running';
+          runnerStatusPanel.textContent = '● Runner en cours d\'exécution';
+          startRunnerBtn.disabled = true;
+          stopRunnerBtn.disabled = false;
+          log('Runner actif', 'running');
+        } else {
+          runnerStatus.className = 'status-dot';
+          runnerText.textContent = 'À l\'arrêt';
+          runnerStatusPanel.className = 'runner-status idle';
+          runnerStatusPanel.textContent = 'Runner à l\'arrêt';
+          startRunnerBtn.disabled = false;
+          stopRunnerBtn.disabled = true;
+        }
+      } catch (e) {
+        console.error('Failed to load queue:', e);
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/executions/summary');
+        const summary = await res.json();
+        
+        statSuccess.textContent = summary.success;
+        statError.textContent = summary.error;
+        statTotal.textContent = summary.today;
+        
+        const execRes = await fetch('/api/executions?limit=20');
+        const execData = await execRes.json();
+        
+        if (execData.executions && execData.executions.length > 0) {
+          historyList.innerHTML = execData.executions.map(e => {
+            const time = new Date(e.startedAt).toLocaleTimeString();
+            const duration = e.duration ? `${e.duration}ms` : '—';
+            return `
+              <div class="history-item ${esc(e.status)}">
+                <div>
+                  <div class="project-name">${esc(e.projectName)}</div>
+                  <div class="history-time">${esc(time)} — ${esc(duration)}</div>
+                </div>
+                <span class="project-status ${esc(e.status)}">${esc(e.status)}</span>
+              </div>
+            `;
+          }).join('');
+        } else {
+          historyList.innerHTML = '<p class="empty-state">Aucune exécution aujourd'hui</p>';
+        }
+      } catch (e) {
+        console.error('Failed to load history:', e);
+      }
+    }
+
+    async function addProject() {
+      const name = document.getElementById('project-name').value.trim();
+      const pathVal = document.getElementById('project-path').value.trim();
+      const description = document.getElementById('project-desc').value.trim();
+      
+      if (!name || !pathVal) {
+        alert('Nom et chemin requis');
+        return;
+      }
+      
+      try {
+        const res = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, path: pathVal, description })
+        });
+        
+        if (res.ok) {
+          document.getElementById('project-name').value = '';
+          document.getElementById('project-path').value = '';
+          document.getElementById('project-desc').value = '';
+          log(`Projet ajouté: ${name}`, 'success');
+          loadProjects();
+        } else {
+          const err = await res.json();
+          alert('Erreur: ' + (err.error || 'Inconnue'));
+          log('Erreur ajout projet', 'error');
+        }
+      } catch (e) {
+        alert('Erreur: ' + e.message);
+        log('Erreur ajout projet: ' + e.message, 'error');
+      }
+    }
+
+    async function addToQueue(projectId) {
+      try {
+        await fetch('/api/queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId, action: 'add' })
+        });
+        log('Projet ajouté à la queue', 'info');
+        loadQueue();
+      } catch (e) {
+        console.error('Failed to add to queue:', e);
+        log('Erreur ajout à la queue', 'error');
+      }
+    }
+
+    async function removeFromQueue(projectId) {
+      try {
+        await fetch('/api/queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId, action: 'remove' })
+        });
+        log('Projet retiré de la queue', 'info');
+        loadQueue();
+      } catch (e) {
+        console.error('Failed to remove from queue:', e);
+        log('Erreur retrait de la queue', 'error');
+      }
+    }
+
+    async function startRunner() {
+      try {
+        await fetch('/api/queue/run', {
+          method: 'POST'
+        });
+        log('Runner démarré', 'success');
+        loadQueue();
+      } catch (e) {
+        console.error('Failed to start runner:', e);
+        log('Erreur démarrage runner', 'error');
+      }
+    }
+
+    async function stopRunner() {
+      try {
+        await fetch('/api/queue/stop', {
+          method: 'POST'
+        });
+        log('Runner arrêté', 'info');
+        loadQueue();
+      } catch (e) {
+        console.error('Failed to stop runner:', e);
+        log('Erreur arrêt runner', 'error');
+      }
+    }
+
+    startRunnerBtn.addEventListener('click', startRunner);
+    stopRunnerBtn.addEventListener('click', stopRunner);
+    addProjectBtn.addEventListener('click', addProject);
+
+    checkServer();
+    checkOpencode();
+    loadProjects();
+    loadQueue();
+    loadHistory();
+    
+    setInterval(loadQueue, 2000);
+    setInterval(loadHistory, 3000);
+  </script>
+</body>
+</html>
