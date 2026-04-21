@@ -1,6 +1,6 @@
 project_name: opencode-claw
 phase: in-progress
-progress: 60
+progress: 85
 active_role: Developer
 
 marketing:
@@ -18,7 +18,7 @@ far_vision:
   - Support multi-agents avec priorisation intelligente
   - Intégration native des skills et workflows ferule
 
-next_action: Sprint 2 validé — démarrer Sprint 3 (zone info + améliorations TUI)
+next_action: Sprint 3 terminé et validé — planifier Sprint 4 (multi-session, favoris, raccourcis)
 next_command: bmad-sprint
 next_role: Scrum Master
 
@@ -63,7 +63,7 @@ sprints:
     status: complete
     stories:
       - id: S2-01
-        title: Install @opencode-ai/sdk + proxy routes Express
+        title: Install @opencode-ai/sdk + proxy routes
         status: complete
       - id: S2-02
         title: UI — layout projet (2 colonnes TUI + info)
@@ -73,6 +73,37 @@ sprints:
         status: complete
         tests_executed: true
         test_output: Playwright — screenshot test-02-project-clicked.png
+        test_result: pass
+
+  - number: 3
+    goal: Zone info fonctionnelle + TUI polish
+    status: complete
+    stories:
+      - id: S3-01
+        title: Zone info — header projet (nom, path, statut)
+        status: complete
+        tests_executed: true
+        test_output: Playwright — screenshot test-03-sprint3.png
+        test_result: pass
+      - id: S3-02
+        title: Zone info — stats exécutions (today/week, success rate)
+        status: complete
+        tests_executed: true
+        test_result: pass
+      - id: S3-03
+        title: Zone info — historique récent du projet (5 dernières exécutions)
+        status: complete
+        tests_executed: true
+        test_result: pass
+      - id: S3-04
+        title: TUI — indicator de connexion opencode (connecté/déconnecté)
+        status: complete
+        tests_executed: true
+        test_result: pass
+      - id: S3-05
+        title: TUI — clear button + auto-scroll toggle
+        status: complete
+        tests_executed: true
         test_result: pass
 
 artifacts:

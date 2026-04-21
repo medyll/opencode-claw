@@ -158,13 +158,79 @@
     .tui-header .project-label { font-weight: 600; color: var(--color-text, #c9d1d9); }
     .tui-header .session-id { font-size: 10px; opacity: 0.6; }
 
-    /* Right — Info zone (placeholder) */
+    /* Right — Info zone */
     .info-zone {
       width: 280px; flex-shrink: 0;
       background: var(--color-surface, #161b22);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--color-muted, #8b949e); font-size: 11px;
+      border-left: 1px solid var(--color-border, #30363d);
+      display: flex; flex-direction: column;
+      overflow: hidden;
     }
+    .info-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--color-border, #30363d);
+      flex-shrink: 0;
+    }
+    .info-project-name {
+      font-size: 13px; font-weight: 700;
+      color: var(--color-text, #c9d1d9);
+      margin-bottom: 6px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .info-project-path {
+      font-size: 10px; color: var(--color-muted, #8b949e);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 8px;
+    }
+    .info-status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 8px; border-radius: 10px;
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+    }
+    .info-status-badge.active {
+      background: rgba(63,185,80,0.15); color: var(--color-success, #3fb950);
+    }
+    .info-status-badge.running {
+      background: rgba(210,153,34,0.15); color: #d29922;
+    }
+    .info-status-badge.error {
+      background: rgba(248,81,73,0.15); color: var(--color-danger, #f85149);
+    }
+    .info-content {
+      flex: 1; overflow-y: auto; padding: 12px 14px;
+    }
+    .info-section { margin-bottom: 16px; }
+    .info-section-title {
+      font-size: 10px; font-weight: 700;
+      color: var(--color-muted, #8b949e);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .info-empty {
+      font-size: 11px; color: var(--color-muted, #8b949e);
+      text-align: center; padding: 20px 0;
+    }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .stat-card {
+      background: var(--color-bg, #0d1117);
+      border: 1px solid var(--color-border, #30363d);
+      border-radius: 5px; padding: 7px 9px;
+    }
+    .stat-value { font-size: 18px; font-weight: 700; color: var(--color-text, #c9d1d9); }
+    .stat-label { font-size: 10px; color: var(--color-muted, #8b949e); margin-top: 2px; }
+    .stat-card.success .stat-value { color: var(--color-success, #3fb950); }
+    .stat-card.error   .stat-value { color: var(--color-danger, #f85149); }
+
+    .exec-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 0; border-bottom: 1px solid var(--color-border, #30363d);
+      font-size: 11px;
+    }
+    .exec-item:last-child { border-bottom: none; }
+    .exec-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .exec-dot.success { background: var(--color-success, #3fb950); }
+    .exec-dot.error   { background: var(--color-danger, #f85149); }
+    .exec-time { color: var(--color-muted, #8b949e); font-size: 10px; margin-left: auto; }
     /* ── TUI messages ── */
     .tui-messages {
       flex: 1; overflow-y: auto; padding: 12px 16px;
@@ -199,6 +265,19 @@
     }
     .tui-send-btn:disabled { opacity: 0.4; cursor: default; }
     .tui-send-btn:hover:not(:disabled) { background: var(--color-primary-hover, #79c0ff); }
+
+    .tui-controls { display: flex; gap: 6px; align-items: center; }
+    .tui-ctrl-btn {
+      background: none; border: 1px solid var(--color-border, #30363d);
+      border-radius: 4px; color: var(--color-muted, #8b949e);
+      font-size: 10px; padding: 2px 7px; cursor: pointer;
+    }
+    .tui-ctrl-btn:hover { border-color: var(--color-primary, #58a6ff); color: var(--color-text, #c9d1d9); }
+    .tui-ctrl-btn.active { border-color: var(--color-primary, #58a6ff); color: var(--color-primary, #58a6ff); }
+    .tui-conn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-muted, #8b949e); flex-shrink: 0; }
+    .tui-conn-dot.ok   { background: var(--color-success, #3fb950); }
+    .tui-conn-dot.fail { background: var(--color-danger, #f85149); }
+    .tui-header-left { display: flex; align-items: center; gap: 8px; }
   </style>
 </head>
 <body>
@@ -246,8 +325,15 @@
         <!-- TUI zone -->
         <div class="tui-zone" id="tui-zone">
           <div class="tui-header">
-            <span class="project-label" id="tui-project-name">—</span>
-            <span class="session-id" id="tui-session-id"></span>
+            <div class="tui-header-left">
+              <span class="tui-conn-dot" id="tui-conn-dot"></span>
+              <span class="project-label" id="tui-project-name">—</span>
+              <span class="session-id" id="tui-session-id"></span>
+            </div>
+            <div class="tui-controls">
+              <button type="button" class="tui-ctrl-btn active" id="tui-autoscroll-btn" title="Auto-scroll">↓</button>
+              <button type="button" class="tui-ctrl-btn" id="tui-clear-btn" title="Effacer messages">✕ clear</button>
+            </div>
           </div>
           <div class="tui-messages" id="tui-messages">
             <p class="tui-empty">Aucun message</p>
@@ -258,9 +344,16 @@
           </div>
         </div>
 
-        <!-- Info zone (placeholder) -->
-        <div class="info-zone">
-          Info — S3
+        <!-- Info zone -->
+        <div class="info-zone" id="info-zone">
+          <div class="info-header" id="info-header">
+            <div class="info-project-name" id="info-project-name">—</div>
+            <div class="info-project-path" id="info-project-path"></div>
+            <span class="info-status-badge active" id="info-status-badge">Active</span>
+          </div>
+          <div class="info-content" id="info-content">
+            <p class="info-empty">Sélectionne un projet</p>
+          </div>
         </div>
 
       </div>
@@ -281,10 +374,28 @@
     const tuiMessages = document.getElementById('tui-messages');
     const tuiInput    = document.getElementById('tui-input');
     const tuiSendBtn  = document.getElementById('tui-send');
+    const infoZone         = document.getElementById('info-zone');
+    const infoProjectName  = document.getElementById('info-project-name');
+    const infoProjectPath  = document.getElementById('info-project-path');
+    const infoStatusBadge  = document.getElementById('info-status-badge');
+    const infoContent      = document.getElementById('info-content');
+    const tuiConnDot       = document.getElementById('tui-conn-dot');
+    const tuiAutoScrollBtn = document.getElementById('tui-autoscroll-btn');
+    const tuiClearBtn      = document.getElementById('tui-clear-btn');
 
     let activeId    = null;
     let sessionId   = null;
     let sseSource   = null;
+    let autoScroll  = true;
+
+    tuiAutoScrollBtn.addEventListener('click', () => {
+      autoScroll = !autoScroll;
+      tuiAutoScrollBtn.classList.toggle('active', autoScroll);
+    });
+
+    tuiClearBtn.addEventListener('click', () => {
+      tuiMessages.innerHTML = '<p class="tui-empty">Messages effacés</p>';
+    });
 
     function esc(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -299,6 +410,9 @@
 
       tuiName.textContent = project.name;
       tuiSess.textContent = '';
+
+      // Update info zone
+      renderProjectInfo(project);
 
       noProj.style.display = 'none';
       space.classList.add('visible');
@@ -361,7 +475,65 @@
     }
 
     function scrollMessages() {
-      tuiMessages.scrollTop = tuiMessages.scrollHeight;
+      if (autoScroll) tuiMessages.scrollTop = tuiMessages.scrollHeight;
+    }
+
+    // ── Render project info in info zone ──
+    function renderProjectInfo(project) {
+      infoProjectName.textContent = project.name;
+      infoProjectPath.textContent = project.path;
+      infoProjectPath.title = project.path;
+      const status = project.status || 'active';
+      infoStatusBadge.className = `info-status-badge ${status}`;
+      infoStatusBadge.textContent = status;
+      infoContent.innerHTML = '<p class="info-empty">Chargement…</p>';
+      loadInfoContent(project.id);
+    }
+
+    async function loadInfoContent(projectId) {
+      try {
+        const [sumRes, execRes] = await Promise.all([
+          fetch(`/api/executions/summary`),
+          fetch(`/api/executions?projectId=${encodeURIComponent(projectId)}&limit=5`),
+        ]);
+        const sum = sumRes.ok ? await sumRes.json() : null;
+        const execData = execRes.ok ? await execRes.json() : null;
+        const execs = execData?.executions ?? [];
+
+        const successRate = sum && sum.today > 0
+          ? Math.round((sum.success / sum.today) * 100)
+          : null;
+
+        infoContent.innerHTML = `
+          <div class="info-section">
+            <div class="info-section-title">Aujourd'hui</div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-value">${sum?.today ?? '—'}</div>
+                <div class="stat-label">exécutions</div>
+              </div>
+              <div class="stat-card ${sum?.error ? 'error' : 'success'}">
+                <div class="stat-value">${successRate !== null ? successRate + '%' : '—'}</div>
+                <div class="stat-label">succès</div>
+              </div>
+            </div>
+          </div>
+          <div class="info-section">
+            <div class="info-section-title">Dernières exécutions</div>
+            ${execs.length === 0
+              ? '<p class="info-empty">Aucune exécution</p>'
+              : execs.map(e => `
+                <div class="exec-item">
+                  <span class="exec-dot ${e.status}"></span>
+                  <span>${esc(e.status)}</span>
+                  ${e.duration ? `<span>${e.duration}ms</span>` : ''}
+                  <span class="exec-time">${new Date(e.startedAt).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</span>
+                </div>`).join('')
+            }
+          </div>`;
+      } catch {
+        infoContent.innerHTML = '<p class="info-empty">Données indisponibles</p>';
+      }
     }
 
     // ── SSE stream ──
@@ -510,10 +682,12 @@
 
     async function checkOpencode() {
       try {
-        const res = await fetch('/api/oc/sessions');
+        await fetch('/api/oc/sessions');
         ocDot.className = 'dot ok'; ocText.textContent = 'Opencode OK';
+        tuiConnDot.className = 'tui-conn-dot ok';
       } catch {
         ocDot.className = 'dot fail'; ocText.textContent = 'Opencode hors ligne';
+        tuiConnDot.className = 'tui-conn-dot fail';
       }
     }
 

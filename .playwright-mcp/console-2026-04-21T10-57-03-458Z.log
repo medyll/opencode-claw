@@ -1,0 +1,3 @@
+[     111ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/favicon.ico:0
+[   10956ms] [ERROR] session create: SyntaxError: Failed to execute 'json' on 'Response': Unexpected end of JSON input
+    at openProject (http://localhost:3000/:433:37) @ http://localhost:3000/:442
