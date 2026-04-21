@@ -1,6 +1,6 @@
 project_name: opencode-claw
 phase: in-progress
-progress: 85
+progress: 95
 active_role: Developer
 
 marketing:
@@ -18,7 +18,7 @@ far_vision:
   - Support multi-agents avec priorisation intelligente
   - Intégration native des skills et workflows ferule
 
-next_action: Sprint 3 terminé et validé — planifier Sprint 4 (multi-session, favoris, raccourcis)
+next_action: Sprint 4 terminé — app feature-complete, envisager Sprint 5 (multi-agent, polish final)
 next_command: bmad-sprint
 next_role: Scrum Master
 
@@ -104,6 +104,32 @@ sprints:
         title: TUI — clear button + auto-scroll toggle
         status: complete
         tests_executed: true
+        test_result: pass
+
+  - number: 4
+    goal: Session persistence + UX polish
+    status: complete
+    stories:
+      - id: S4-01
+        title: Session persistence — réutiliser session existante au lieu d'en créer
+        status: complete
+        tests_executed: true
+        test_result: pass
+      - id: S4-02
+        title: Sessions list dans info zone — charger une session passée
+        status: complete
+        tests_executed: true
+        test_result: pass
+      - id: S4-03
+        title: Project run button — lancer opencode via queue depuis info zone
+        status: complete
+        tests_executed: true
+        test_result: pass
+      - id: S4-04
+        title: Keyboard nav — Ctrl+K spotlight + flèches pour naviguer projets
+        status: complete
+        tests_executed: true
+        test_output: Playwright — screenshot test-04-spotlight.png
         test_result: pass
 
 artifacts:

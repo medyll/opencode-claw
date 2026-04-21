@@ -1,0 +1,52 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - heading "CodeClaw" [level=1] [ref=e3]
+    - generic [ref=e4]:
+      - generic [ref=e7]: Serveur OK
+      - generic [ref=e10]: Opencode OK
+  - generic [ref=e11]:
+    - complementary [ref=e12]:
+      - generic [ref=e13]: Projets
+      - generic [ref=e15] [cursor=pointer]:
+        - button "✕" [ref=e27]
+        - generic [ref=e16]: opencode-claw
+        - generic [ref=e17]: C:/Users/Mydde/.openclaw/workspace/opencode-claw
+      - generic [ref=e18]:
+        - textbox "Nom" [ref=e19]
+        - textbox "Chemin (D:\\dev\\projet)" [ref=e20]
+        - textbox "Description (optionnel)" [ref=e21]
+        - button "+ Ajouter" [ref=e22] [cursor=pointer]
+    - main [ref=e23]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e33]: opencode-claw
+            - generic [ref=e34]:
+              - button "↓" [ref=e35] [cursor=pointer]
+              - button "✕ clear" [ref=e36] [cursor=pointer]
+          - paragraph [ref=e38]: Erreur connexion opencode
+          - generic [ref=e39]:
+            - textbox "Envoie un message à opencode…" [ref=e40]
+            - button "↑" [ref=e41] [cursor=pointer]
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - generic [ref=e44]: opencode-claw
+            - generic "C:/Users/Mydde/.openclaw/workspace/opencode-claw" [ref=e45]
+            - generic [ref=e46]: active
+          - button "▶ Exécuter" [ref=e48] [cursor=pointer]
+          - generic [ref=e49]:
+            - generic [ref=e50]:
+              - generic [ref=e51]: Aujourd'hui
+              - generic [ref=e52]:
+                - generic [ref=e53]:
+                  - generic [ref=e54]: "0"
+                  - generic [ref=e55]: exécutions
+                - generic [ref=e56]:
+                  - generic [ref=e57]: —
+                  - generic [ref=e58]: succès
+            - generic [ref=e59]:
+              - generic [ref=e60]: Sessions (0)
+              - paragraph [ref=e61]: Aucune session
+            - generic [ref=e62]:
+              - generic [ref=e63]: Dernières exécutions
+              - paragraph [ref=e64]: Aucune exécution

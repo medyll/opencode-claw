@@ -278,6 +278,48 @@
     .tui-conn-dot.ok   { background: var(--color-success, #3fb950); }
     .tui-conn-dot.fail { background: var(--color-danger, #f85149); }
     .tui-header-left { display: flex; align-items: center; gap: 8px; }
+    .info-actions {
+      flex-shrink: 0; padding: 8px 14px;
+      border-bottom: 1px solid var(--color-border, #30363d);
+    }
+    .run-btn {
+      width: 100%; padding: 6px; font-size: 11px; font-weight: 600;
+      background: rgba(63,185,80,0.15); color: var(--color-success, #3fb950);
+      border: 1px solid rgba(63,185,80,0.3); border-radius: 4px; cursor: pointer;
+    }
+    .run-btn:hover:not(:disabled) { background: rgba(63,185,80,0.25); }
+    .run-btn:disabled { opacity: 0.4; cursor: default; }
+    .run-btn.running { background: rgba(210,153,34,0.15); color: #d29922; border-color: rgba(210,153,34,0.3); }
+
+    /* ── Spotlight ── */
+    .spotlight-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); z-index: 100;
+      align-items: flex-start; justify-content: center; padding-top: 15vh;
+    }
+    .spotlight-overlay.visible { display: flex; }
+    .spotlight-box {
+      background: var(--color-surface, #161b22);
+      border: 1px solid var(--color-border, #30363d);
+      border-radius: 8px; width: 420px; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .spotlight-input {
+      width: 100%; padding: 12px 16px; font-size: 13px;
+      background: transparent; border: none; border-bottom: 1px solid var(--color-border, #30363d);
+      color: var(--color-text, #c9d1d9); font-family: inherit; outline: none;
+    }
+    .spotlight-results { max-height: 260px; overflow-y: auto; }
+    .spotlight-item {
+      padding: 9px 16px; cursor: pointer; font-size: 12px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .spotlight-item:hover, .spotlight-item.focused {
+      background: rgba(88,166,255,0.1);
+    }
+    .spotlight-item .s-name { font-weight: 600; color: var(--color-text, #c9d1d9); }
+    .spotlight-item .s-path { font-size: 10px; color: var(--color-muted, #8b949e); }
+    .spotlight-empty { padding: 16px; font-size: 11px; color: var(--color-muted, #8b949e); text-align: center; }
   </style>
 </head>
 <body>
@@ -351,6 +393,9 @@
             <div class="info-project-path" id="info-project-path"></div>
             <span class="info-status-badge active" id="info-status-badge">Active</span>
           </div>
+          <div class="info-actions">
+            <button type="button" id="run-btn" class="run-btn" disabled>▶ Exécuter</button>
+          </div>
           <div class="info-content" id="info-content">
             <p class="info-empty">Sélectionne un projet</p>
           </div>
@@ -359,6 +404,14 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- Spotlight overlay -->
+  <div class="spotlight-overlay" id="spotlight">
+    <div class="spotlight-box">
+      <input type="text" class="spotlight-input" id="spotlight-input" placeholder="Chercher un projet…" autocomplete="off">
+      <div class="spotlight-results" id="spotlight-results"></div>
+    </div>
   </div>
 
   <script>
@@ -382,11 +435,67 @@
     const tuiConnDot       = document.getElementById('tui-conn-dot');
     const tuiAutoScrollBtn = document.getElementById('tui-autoscroll-btn');
     const tuiClearBtn      = document.getElementById('tui-clear-btn');
+    const runBtn           = document.getElementById('run-btn');
 
     let activeId    = null;
     let sessionId   = null;
     let sseSource   = null;
     let autoScroll  = true;
+    let allProjects = [];
+    let spotlightFocus = -1;
+
+    const spotlight      = document.getElementById('spotlight');
+    const spotlightInput = document.getElementById('spotlight-input');
+    const spotlightRes   = document.getElementById('spotlight-results');
+
+    function openSpotlight() {
+      spotlight.classList.add('visible');
+      spotlightInput.value = '';
+      spotlightFocus = -1;
+      renderSpotlight('');
+      spotlightInput.focus();
+    }
+    function closeSpotlight() { spotlight.classList.remove('visible'); }
+
+    function renderSpotlight(q) {
+      const filtered = q
+        ? allProjects.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.path.toLowerCase().includes(q.toLowerCase()))
+        : allProjects;
+      if (!filtered.length) {
+        spotlightRes.innerHTML = '<p class="spotlight-empty">Aucun projet</p>';
+        return;
+      }
+      spotlightRes.innerHTML = filtered.map((p, i) => `
+        <div class="spotlight-item${i === spotlightFocus ? ' focused' : ''}" data-id="${esc(p.id)}">
+          <span class="s-name">${esc(p.name)}</span>
+          <span class="s-path">${esc(p.path)}</span>
+        </div>`).join('');
+      spotlightRes.querySelectorAll('.spotlight-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const p = allProjects.find(x => x.id === el.dataset.id);
+          if (p) { closeSpotlight(); openProject(p); }
+        });
+      });
+    }
+
+    spotlightInput.addEventListener('input', () => { spotlightFocus = -1; renderSpotlight(spotlightInput.value); });
+
+    spotlightInput.addEventListener('keydown', (e) => {
+      const items = spotlightRes.querySelectorAll('.spotlight-item');
+      if (e.key === 'ArrowDown') { e.preventDefault(); spotlightFocus = Math.min(spotlightFocus + 1, items.length - 1); renderSpotlight(spotlightInput.value); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); spotlightFocus = Math.max(spotlightFocus - 1, 0); renderSpotlight(spotlightInput.value); }
+      else if (e.key === 'Enter') {
+        const focused = spotlightRes.querySelector('.focused');
+        if (focused) { const p = allProjects.find(x => x.id === focused.dataset.id); if (p) { closeSpotlight(); openProject(p); } }
+      } else if (e.key === 'Escape') closeSpotlight();
+    });
+
+    spotlight.addEventListener('click', (e) => { if (e.target === spotlight) closeSpotlight(); });
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSpotlight(); }
+      if (e.key === 'Escape' && spotlight.classList.contains('visible')) closeSpotlight();
+    });
 
     tuiAutoScrollBtn.addEventListener('click', () => {
       autoScroll = !autoScroll;
@@ -395,6 +504,49 @@
 
     tuiClearBtn.addEventListener('click', () => {
       tuiMessages.innerHTML = '<p class="tui-empty">Messages effacés</p>';
+    });
+
+    runBtn.addEventListener('click', async () => {
+      const pid = runBtn.dataset.projectId;
+      if (!pid) return;
+      runBtn.classList.add('running');
+      runBtn.textContent = '⏳ En queue…';
+      runBtn.disabled = true;
+      try {
+        const res = await fetch('/api/queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'add', projectId: pid })
+        });
+        if (res.ok) {
+          await fetch('/api/queue/run', { method: 'POST' });
+          runBtn.textContent = '✓ Lancé';
+          setTimeout(() => {
+            runBtn.classList.remove('running');
+            runBtn.textContent = '▶ Exécuter';
+            runBtn.disabled = false;
+          }, 3000);
+        } else {
+          runBtn.textContent = '✕ Erreur';
+          setTimeout(() => { runBtn.classList.remove('running'); runBtn.textContent = '▶ Exécuter'; runBtn.disabled = false; }, 2000);
+        }
+      } catch {
+        runBtn.classList.remove('running');
+        runBtn.textContent = '▶ Exécuter';
+        runBtn.disabled = false;
+      }
+    });
+
+    infoContent.addEventListener('click', (e) => {
+      const item = e.target.closest('.session-item');
+      if (!item) return;
+      const sid = item.dataset.sessionId;
+      if (sid && sid !== sessionId) {
+        sessionId = sid;
+        tuiSess.textContent = `#${sid.slice(0,8)}`;
+        tuiMessages.innerHTML = '<p class="tui-empty">Chargement session…</p>';
+        loadMessages(sid);
+      }
     });
 
     function esc(s) {
@@ -422,16 +574,26 @@
       tuiInput.value = '';
       if (sseSource) { sseSource.close(); sseSource = null; }
 
-      // Create session for this project
+      // Reuse existing session or create new one
       try {
-        const res = await fetch('/api/oc/sessions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ directory: project.path, title: project.name })
-        });
-        if (res.ok) {
-          const session = await res.json();
-          sessionId = session?.id ?? null;
+        let session = null;
+        const listRes = await fetch(`/api/oc/sessions?directory=${encodeURIComponent(project.path)}`);
+        if (listRes.ok) {
+          const sessions = await listRes.json();
+          if (Array.isArray(sessions) && sessions.length > 0) {
+            session = sessions[0];
+          }
+        }
+        if (!session) {
+          const createRes = await fetch('/api/oc/sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ directory: project.path, title: project.name })
+          });
+          if (createRes.ok) session = await createRes.json();
+        }
+        if (session) {
+          sessionId = session.id ?? null;
           tuiSess.textContent = sessionId ? `#${sessionId.slice(0,8)}` : '';
           tuiMessages.innerHTML = '<p class="tui-empty">Prêt — envoie un message</p>';
           if (sessionId) loadMessages(sessionId);
@@ -440,7 +602,7 @@
           tuiMessages.innerHTML = '<p class="tui-empty">Erreur connexion opencode</p>';
         }
       } catch (e) {
-        console.error('session create:', e);
+        console.error('session open:', e);
         tuiMessages.innerHTML = '<p class="tui-empty">Erreur connexion opencode</p>';
       }
     }
@@ -486,19 +648,23 @@
       const status = project.status || 'active';
       infoStatusBadge.className = `info-status-badge ${status}`;
       infoStatusBadge.textContent = status;
+      runBtn.disabled = false;
+      runBtn.dataset.projectId = project.id;
       infoContent.innerHTML = '<p class="info-empty">Chargement…</p>';
-      loadInfoContent(project.id);
+      loadInfoContent(project.id, project.path);
     }
 
-    async function loadInfoContent(projectId) {
+    async function loadInfoContent(projectId, projectPath) {
       try {
-        const [sumRes, execRes] = await Promise.all([
+        const [sumRes, execRes, sessRes] = await Promise.all([
           fetch(`/api/executions/summary`),
           fetch(`/api/executions?projectId=${encodeURIComponent(projectId)}&limit=5`),
+          fetch(`/api/oc/sessions?directory=${encodeURIComponent(projectPath)}`),
         ]);
         const sum = sumRes.ok ? await sumRes.json() : null;
         const execData = execRes.ok ? await execRes.json() : null;
         const execs = execData?.executions ?? [];
+        const sessions = (sessRes.ok ? await sessRes.json() : null) ?? [];
 
         const successRate = sum && sum.today > 0
           ? Math.round((sum.success / sum.today) * 100)
@@ -517,6 +683,18 @@
                 <div class="stat-label">succès</div>
               </div>
             </div>
+          </div>
+          <div class="info-section">
+            <div class="info-section-title">Sessions (${sessions.length})</div>
+            ${sessions.length === 0
+              ? '<p class="info-empty">Aucune session</p>'
+              : sessions.map(s => `
+                <div class="exec-item session-item" data-session-id="${esc(s.id)}" style="cursor:pointer">
+                  <span class="exec-dot ${s.id === sessionId ? 'ok' : ''}"></span>
+                  <span>${esc(s.title || s.id.slice(0,8))}</span>
+                  <span class="exec-time">${s.id === sessionId ? 'active' : '#' + s.id.slice(0,6)}</span>
+                </div>`).join('')
+            }
           </div>
           <div class="info-section">
             <div class="info-section-title">Dernières exécutions</div>
@@ -638,7 +816,8 @@
       try {
         const res = await fetch('/api/projects');
         const data = await res.json();
-        renderProjects(data.projects || []);
+        allProjects = data.projects || [];
+        renderProjects(allProjects);
       } catch (e) { console.error(e); }
     }
 

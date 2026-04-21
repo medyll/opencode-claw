@@ -1,0 +1,21 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - heading "CodeClaw" [level=1] [ref=e3]
+    - generic [ref=e4]:
+      - generic [ref=e7]: Serveur OK
+      - generic [ref=e10]: Opencode OK
+  - generic [ref=e11]:
+    - complementary [ref=e12]:
+      - generic [ref=e13]: Projets
+      - generic [ref=e15] [cursor=pointer]:
+        - generic [ref=e16]: opencode-claw
+        - generic [ref=e17]: C:/Users/Mydde/.openclaw/workspace/opencode-claw
+      - generic [ref=e18]:
+        - textbox "Nom" [ref=e19]
+        - textbox "Chemin (D:\\dev\\projet)" [ref=e20]
+        - textbox "Description (optionnel)" [ref=e21]
+        - button "+ Ajouter" [ref=e22] [cursor=pointer]
+    - main [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]: ⟨/⟩
+        - generic [ref=e26]: Sélectionne un projet
