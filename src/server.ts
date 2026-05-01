@@ -62,6 +62,29 @@ app.use('/css-base', express.static(CSS_BASE_PATH));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/api/oc', routesSdk);
 
+// GET /api/skills — list available skills
+app.get('/api/skills', (req, res) => {
+  const skillsDir = path.join(__dirname, '../skills');
+  try {
+    const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+    const skills = entries
+      .filter(d => d.isDirectory())
+      .map(dir => {
+        const skillPath = path.join(skillsDir, dir.name, 'SKILL.md');
+        let description = '';
+        try {
+          const content = fs.readFileSync(skillPath, 'utf-8');
+          const match = content.match(/description:\s*(.+)/i);
+          description = match ? match[1].trim() : '';
+        } catch { /* ignore */ }
+        return { id: dir.name, name: dir.name, description, available: true };
+      });
+    res.json(skills);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // --- Persistence ---
 
 function readJSON<T>(file: string): T | null {
@@ -325,6 +348,44 @@ app.get('/api/executions/summary', (req, res) => {
     error: todayExecutions.filter(e => e.status === 'error').length,
     lastExecution: executions[0]?.startedAt ?? null,
   });
+});
+
+// GET /api/executions/:id/logs — export logs as text
+app.get('/api/executions/:id/logs', (req, res) => {
+  const data = readJSON<ExecutionsFile>(EXECUTIONS_FILE);
+  const executions = data?.executions ?? [];
+  const execution = executions.find(e => e.id === req.params.id);
+  
+  if (!execution) {
+    return res.status(404).json({ error: 'Execution not found' });
+  }
+  
+  // Format logs as text
+  const lines = [
+    `CodeClaw Execution Log`,
+    `======================`,
+    ``,
+    `Project: ${execution.projectName}`,
+    `Status: ${execution.status.toUpperCase()}`,
+    `Started: ${new Date(execution.startedAt).toLocaleString()}`,
+    `Duration: ${Math.round(execution.duration / 1000)}s`,
+    ``,
+    `---`,
+    ``,
+  ];
+  
+  if (execution.error) {
+    lines.push(`ERROR: ${execution.error}`);
+  } else {
+    lines.push(`Execution completed successfully.`);
+  }
+  
+  const content = lines.join('\n');
+  const filename = `${execution.projectName.replace(/[^a-z0-9]/gi, '-')}-${new Date(execution.startedAt).toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+  
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(content);
 });
 
 app.listen(PORT, () => {

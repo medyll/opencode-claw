@@ -1,19 +1,61 @@
-# CodeClaw — Documentation
+# CodeClaw
 
-> Orchestrateur léger pour [opencode](https://opencode.ai) avec dashboard visuel et execution queue.
+> Orchestrateur visuel pour [opencode](https://opencode.ai) avec dashboard multi-projets, TUI en temps réel et gestion intelligente des sessions.
+
+**Version:** 1.0.0  
+**Status:** ✅ Release-ready
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](CHANGELOG.md)
 
 ---
 
-## Démarrage rapide
+## 🚀 Démarrage rapide
+
+### Prérequis
+
+- Node.js 18+ 
+- [opencode](https://opencode.ai) installé et fonctionnel
+- pnpm (recommandé) ou npm
+
+### Installation
 
 ```bash
+# Cloner le repo
+git clone https://github.com/medyll/opencode-claw.git
+cd opencode-claw
+
+# Installer les dépendances
 pnpm install
-pnpm dev          # ts-node src/server.ts → http://localhost:3000
-pnpm build        # compile vers dist/
-pnpm start        # node dist/server.js
+
+# Démarrer en mode développement
+pnpm dev
 ```
 
+L'application est accessible sur **http://localhost:3000**
+
+### Commandes disponibles
+
+| Commande | Description |
+|----------|-------------|
+| `pnpm dev` | Démarre le serveur de développement (tsx) |
+| `pnpm build` | Compile le TypeScript vers `dist/` |
+| `pnpm start` | Démarre le serveur de production |
+| `pnpm lint` | Vérifie le code avec ESLint |
+
+---
+
+## ⚙️ Configuration
+
 ### Variables d'environnement
+
+Créez un fichier `.env` à la racine :
+
+```env
+PORT=3000
+OPENCODE_URL=http://localhost:4096
+CSS_BASE_PATH=node_modules/@medyll/css-base/dist
+```
 
 | Variable | Défaut | Description |
 |----------|--------|-------------|
@@ -21,45 +63,127 @@ pnpm start        # node dist/server.js
 | `OPENCODE_URL` | `http://localhost:4096` | URL de l'instance opencode |
 | `CSS_BASE_PATH` | `node_modules/@medyll/css-base/dist` | Chemin vers les assets css-base |
 
-Exemple `.env` :
-```env
-PORT=3000
-OPENCODE_URL=http://localhost:4096
-```
+---
+
+## ✨ Features
+
+### Dashboard multi-projets
+- Liste de tous vos projets opencode
+- Statut en temps réel (active/running/error)
+- Navigation rapide avec Ctrl+K
+
+### TUI en temps réel
+- Chat avec opencode via SDK (sans iframe)
+- Streaming SSE des réponses
+- Support multi-session par projet
+
+### Zone info
+- **Header projet** — nom, path, statut
+- **Stats exécutions** — today/week, success rate
+- **Sessions list** — basculez entre sessions actives
+- **Historique** — 5 dernières exécutions avec export .txt
+- **Skills panel** — skills disponibles
+
+### Multi-agent
+- **Priority queue** — 4 niveaux (low/normal/high/urgent)
+- **Auto-decay** — priorité baisse après 5min d'inactivité
+- **Session switcher** — changez de contexte instantanément
+
+### Personnalisation
+- **Thème dark/light** — switch avec persistance
+- **Navigation clavier** — Ctrl+K, flèches, Enter
 
 ---
 
-## Architecture
+## 📖 Usage
+
+### 1. Ajouter un projet
+
+Dans la sidebar gauche :
+- Remplissez **Nom**, **Chemin** (absolu), **Description** (optionnel)
+- Cliquez sur **+ Ajouter**
+
+### 2. Ouvrir un projet
+
+Cliquez sur un projet dans la sidebar :
+- La TUI s'ouvre à gauche
+- La zone info s'affiche à droite
+- Une session opencode est créée automatiquement
+
+### 3. Envoyer un prompt
+
+Dans la zone TUI :
+- Tapez votre message
+- Appuyez sur **Entrée** ou cliquez sur **↑**
+- La réponse stream en temps réel
+
+### 4. Gérer les sessions
+
+Cliquez sur le badge "**X sessions**" en header TUI :
+- Voir toutes les sessions actives
+- Changer de session (clic)
+- Modifier la priorité (boutons colorés)
+
+### 5. Exécuter opencode
+
+Dans la zone info :
+- Bouton **Exécuter** → ajoute le projet à la queue
+- Le queue runner lance `opencode run` automatiquement
+- Historique des exécutions mis à jour
+
+---
+
+## 🏗️ Architecture
 
 ```
 opencode-claw/
 ├── src/
-│   ├── server.ts          # Serveur Express + queue runner
-│   └── data/              # Persistence JSON (gitignorés)
+│   ├── server.ts          # Serveur Express + API REST
+│   ├── routes/
+│   │   └── routesSdk.ts   # Routes proxy SDK opencode
+│   └── data/              # Persistence JSON
 │       ├── projects.json
 │       ├── queue.json
-│       └── executions.json
+│       ├── executions.json
+│       └── sessions.json  # Métadonnées sessions (priority, etc.)
 ├── public/
-│   └── index.html         # Dashboard SPA (vanilla JS)
-├── dist/                  # Build TypeScript (gitignoré)
-└── bmad/                  # Artefacts BMAD
+│   └── index.html         # Dashboard SPA (vanilla JS + CSS inline)
+├── skills/                # Skills opencode
+├── bmad/                  # Artefacts BMAD (status, stories, etc.)
+└── CHANGELOG.md           # Historique des versions
 ```
 
 ### Flux d'exécution
 
 ```
-Dashboard (index.html)
-  │  POST /api/queue { action: 'add', projectId }
+Dashboard (public/index.html)
+  │  POST /api/oc/sessions/:id/prompt
   ▼
-queue.json  ←──────── Queue runner (setInterval 3s)
-                            │  opencode run (cwd = project.path)
-                            ▼
-                      executions.json
+routesSdk.ts (proxy SDK opencode)
+  │  opencode.session.promptAsync()
+  ▼
+opencode (SSE stream)
+  │  events: assistant, message.part.updated
+  ▼
+Dashboard (streaming TUI)
+```
+
+### Queue Runner
+
+```
+POST /api/queue { action: 'add', projectId }
+  ▼
+queue.json (file d'attente)
+  ▼
+Runner (setInterval 3s)
+  │  opencode run (cwd = project.path)
+  ▼
+executions.json (historique)
 ```
 
 ---
 
-## API REST
+## 📡 API REST
 
 ### Projets
 
@@ -67,45 +191,41 @@ queue.json  ←──────── Queue runner (setInterval 3s)
 |---------|-------|-------------|
 | `GET` | `/api/projects` | Liste tous les projets |
 | `POST` | `/api/projects` | Crée un projet |
+| `DELETE` | `/api/projects/:id` | Supprime un projet |
 
-**POST /api/projects** — body :
-```json
-{ "name": "mon-projet", "path": "/chemin/absolu", "description": "optionnel" }
-```
+### Sessions (SDK Proxy)
 
-**Statuts projet :** `active` · `running` · `error`
-
----
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| `GET` | `/api/oc/sessions?directory=xxx` | Liste sessions |
+| `POST` | `/api/oc/sessions` | Crée une session |
+| `GET` | `/api/oc/sessions/:id` | Détails session |
+| `GET` | `/api/oc/sessions/:id/messages` | Messages session |
+| `POST` | `/api/oc/sessions/:id/prompt` | Envoie prompt |
+| `POST` | `/api/oc/sessions/:id/priority` | Définit priorité |
+| `DELETE` | `/api/oc/sessions/:id` | Supprime session |
+| `GET` | `/api/oc/events` | SSE event stream |
 
 ### Queue
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
 | `GET` | `/api/queue` | État de la queue |
-| `POST` | `/api/queue` | Modifier la queue |
-| `POST` | `/api/queue/run` | Démarrer le runner |
-| `POST` | `/api/queue/stop` | Arrêter le runner |
-
-**POST /api/queue** — actions disponibles :
-
-| `action` | `projectId` requis | Effet |
-|----------|--------------------|-------|
-| `add` | ✓ | Ajoute à la queue (dédupliqué) |
-| `remove` | ✓ | Retire de la queue |
-| `clear` | ✗ | Vide la queue |
-| `start` | ✗ | Démarre le runner |
-| `stop` | ✗ | Arrête le runner |
-
----
+| `POST` | `/api/queue` | Modifier (add/remove/clear/start/stop) |
 
 ### Exécutions
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| `GET` | `/api/executions` | Historique (query: `projectId`, `limit` max 200) |
-| `GET` | `/api/executions/summary` | Stats du jour (success/error/total) |
+| `GET` | `/api/executions?projectId=xxx&limit=50` | Historique |
+| `GET` | `/api/executions/summary` | Stats (today/total/success/error) |
+| `GET` | `/api/executions/:id/logs` | Export logs (.txt) |
 
----
+### Skills
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| `GET` | `/api/skills` | Liste des skills disponibles |
 
 ### Santé
 
@@ -116,17 +236,27 @@ GET /api/health
 
 ---
 
-## Types TypeScript
+## 🎨 Types TypeScript
 
 ```typescript
 interface Project {
   id: string;           // "proj-{timestamp}"
   name: string;
-  path: string;         // chemin absolu du projet
+  path: string;         // chemin absolu
   description: string;
   status: 'active' | 'running' | 'error';
   lastRun: string | null;
   createdAt: string;    // ISO 8601
+}
+
+interface SessionMeta {
+  id: string;
+  projectId: string;
+  directory: string;
+  title: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  lastActivity: string;
+  createdAt: string;
 }
 
 interface Execution {
@@ -143,60 +273,25 @@ interface Execution {
 
 ---
 
-## Dashboard UI
+## ⚠️ Limites connues
 
-Interface SPA vanilla JS servie depuis `public/index.html`.
-
-**Layout :**
-- Header : statuts serveur + opencode
-- Sidebar gauche : Execution Queue + liste Projets
-- Zone principale : iframe opencode + log panel + historique
-
-**Composants clés :**
-
-| Fonction JS | Description |
-|-------------|-------------|
-| `loadProjects()` | Rafraîchit la liste des projets |
-| `loadQueue()` | Rafraîchit la queue + état du runner |
-| `loadHistory()` | Charge l'historique du jour |
-| `addProject()` | Soumet le formulaire d'ajout |
-| `addToQueue(id)` | Ajoute un projet à la queue |
-| `removeFromQueue(id)` | Retire un projet de la queue |
-| `esc(str)` | Échappe le HTML (protection XSS) |
-
-**Polling :** toutes les 5 secondes via `setInterval`.
-
-**CSS :** `@medyll/css-base` servi via `/css-base/app.css` + variables CSS custom (`--color-bg`, `--color-primary`, `--color-muted`, etc.).
-
----
-
-## Queue Runner
-
-- Vérifie la queue toutes les **3 secondes**
-- Un seul job à la fois (`running: true` pendant l'exécution)
-- Lance `opencode run` dans le `cwd` du projet via `child_process.spawn`
-- Logs stdout/stderr préfixés par le nom du projet
-- En cas d'erreur : statut projet → `error`, log dans executions.json
-- Historique limité à **100 exécutions**
-
----
-
-## Persistence
-
-Trois fichiers JSON dans `src/data/` (gitignorés) :
-
-| Fichier | Structure |
-|---------|-----------|
-| `projects.json` | `{ projects: Project[] }` |
-| `queue.json` | `{ queue: string[], running: boolean, lastExecution: string\|null }` |
-| `executions.json` | `{ executions: Execution[] }` |
-
-> **Note :** Pas de locking fichier — usage mono-instance uniquement. Pour un déploiement multi-processus, migrer vers SQLite.
-
----
-
-## Limites connues
-
-- Usage **local uniquement** — aucune authentification
-- Persistence **JSON flat file** — pas adapté à la haute charge
+- **Usage local uniquement** — aucune authentification
+- **Persistence JSON** — pas adapté multi-processus
+- **Mono-instance** — pas de locking fichier
 - `opencode run` doit être dans le `PATH` système
+
+> **Pour déploiement production :** Migrer vers SQLite + ajouter authentification.
+
+---
+
+## 📝 License
+
+MIT — voir [LICENSE](LICENSE)
+
+---
+
+## 🔗 Liens
+
+- [CHANGELOG](CHANGELOG.md) — Historique des versions
+- [opencode](https://opencode.ai) — L'outil orchestré
+- [@medyll/css-base](https://github.com/medyll/css-base) — Système de design

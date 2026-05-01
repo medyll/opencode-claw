@@ -25,8 +25,26 @@
 
 **Test result:** Info zone complète (header, Exécuter, stats, sessions, historique). Spotlight Ctrl+K fonctionnel avec liste projets et navigation clavier.
 
+### Sprint 5 — Multi-agent + polish final ✅ TESTED
+- S5-01 Multi-session UI ✅ (dropdown + session list)
+- S5-02 Session switcher ✅
+- S5-03 Agent priority queue ✅ (priority buttons + auto-decay)
+- S5-04 Skills panel ✅
+- S5-05 Dark/Light theme toggle ✅
+- S5-06 Export execution logs ✅
+
+**Test result:** Multi-session fonctionnel avec switcher, priorité visuelle (4 niveaux), decay auto après 5min, skills panel, toggle thème dark/light, export logs .txt.
+
+### Sprint 6 — Release preparation 🔨
+- S6-01 CHANGELOG.md ✅
+- S6-02 README release ✅
+- S6-03 Code audit ✅
+- S6-04 Error handling UI ✅
+- S6-05 Performance optimization ✅
+- S6-06 Version tagging v1.0.0 ⬚
+
 ## Next
 
-**Action:** Sprint 4 terminé — app feature-complete  
-**Command:** `bmad-sprint`  
-**Role:** Scrum Master
+**Action:** S6-05 terminé — enchaîner sur S6-06 (Version tagging v1.0.0)  
+**Command:** `bmad-dev-story S6-06`  
+**Role:** Developer

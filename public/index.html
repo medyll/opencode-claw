@@ -40,6 +40,46 @@
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-muted, #8b949e); flex-shrink: 0; }
     .dot.ok   { background: var(--color-success, #3fb950); }
     .dot.fail { background: var(--color-danger, #f85149); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--color-border, #30363d);
+      border-radius: 5px; padding: 4px 8px; cursor: pointer;
+      color: var(--color-text, #c9d1d9); font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .theme-toggle:hover { background: var(--color-surface, #161b22); }
+    .toast-container {
+      position: fixed; bottom: 20px; right: 20px;
+      display: flex; flex-direction: column; gap: 8px;
+      z-index: 1000; pointer-events: none;
+    }
+    .toast {
+      padding: 10px 14px; border-radius: 6px;
+      font-size: 12px; min-width: 250px; max-width: 350px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex; align-items: center; gap: 8px;
+      pointer-events: auto; animation: slideIn 0.2s ease;
+    }
+    .toast.error {
+      background: rgba(248,81,73,0.15); border: 1px solid var(--color-danger, #f85149);
+      color: var(--color-text, #c9d1d9);
+    }
+    .toast.success {
+      background: rgba(63,185,80,0.15); border: 1px solid var(--color-success, #3fb950);
+      color: var(--color-text, #c9d1d9);
+    }
+    .toast.info {
+      background: rgba(88,166,255,0.15); border: 1px solid var(--color-primary, #58a6ff);
+      color: var(--color-text, #c9d1d9);
+    }
+    .toast-close {
+      margin-left: auto; background: none; border: none;
+      cursor: pointer; color: inherit; opacity: 0.7; font-size: 14px;
+    }
+    .toast-close:hover { opacity: 1; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
 
     /* ── App layout ── */
     .app { flex: 1; display: flex; overflow: hidden; }
@@ -153,10 +193,59 @@
       border-bottom: 1px solid var(--color-border, #30363d);
       font-size: 11px; color: var(--color-muted, #8b949e);
       display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
+      flex-shrink: 0; gap: 10px;
     }
     .tui-header .project-label { font-weight: 600; color: var(--color-text, #c9d1d9); }
     .tui-header .session-id { font-size: 10px; opacity: 0.6; }
+    .session-count {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 8px; border-radius: 10px;
+      background: rgba(88,166,255,0.1); color: var(--color-primary, #58a6ff);
+      font-size: 10px; font-weight: 600; cursor: pointer;
+      border: 1px solid rgba(88,166,255,0.3);
+    }
+    .session-count:hover { background: rgba(88,166,255,0.15); }
+    .session-dropdown {
+      position: absolute; top: 100%; right: 14px;
+      background: var(--color-surface, #161b22);
+      border: 1px solid var(--color-border, #30363d);
+      border-radius: 6px; padding: 6px;
+      min-width: 200px; max-height: 250px; overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 100;
+      display: none;
+    }
+    .session-dropdown.visible { display: block; }
+    .session-item {
+      padding: 8px 10px; border-radius: 4px;
+      cursor: pointer; font-size: 11px;
+      display: flex; flex-direction: column; gap: 3px;
+      position: relative;
+    }
+    .session-item:hover { background: rgba(88,166,255,0.08); }
+    .session-item.active { background: rgba(88,166,255,0.15); }
+    .priority-menu {
+      position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+      display: none; gap: 3px;
+    }
+    .session-item:hover .priority-menu { display: flex; }
+    .priority-btn {
+      width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--color-border);
+      cursor: pointer; padding: 0;
+    }
+    .priority-btn:hover { transform: scale(1.2); }
+    .priority-btn.urgent { background: #f85149; }
+    .priority-btn.high { background: #d29922; }
+    .priority-btn.normal { background: #3fb950; }
+    .priority-btn.low { background: #8b949e; }
+    .session-item .title { font-weight: 600; color: var(--color-text, #c9d1d9); }
+    .session-item .meta { font-size: 10px; color: var(--color-muted, #8b949e); display: flex; justify-content: space-between; align-items: center; }
+    .priority-badge {
+      width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+    }
+    .priority-urgent { background: #f85149; box-shadow: 0 0 6px #f85149; }
+    .priority-high { background: #d29922; }
+    .priority-normal { background: #3fb950; }
+    .priority-low { background: #8b949e; }
 
     /* Right — Info zone */
     .info-zone {
@@ -210,6 +299,37 @@
       font-size: 11px; color: var(--color-muted, #8b949e);
       text-align: center; padding: 20px 0;
     }
+    .exec-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; padding: 6px 0;
+    }
+    .exec-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .exec-dot.success { background: var(--color-success, #3fb950); }
+    .exec-dot.error { background: var(--color-danger, #f85149); }
+    .exec-time { margin-left: auto; font-size: 10px; color: var(--color-muted); }
+    .exec-export {
+      background: none; border: 1px solid var(--color-border);
+      border-radius: 3px; padding: 2px 6px; cursor: pointer;
+      color: var(--color-muted); font-size: 10px; margin-left: 5px;
+    }
+    .exec-export:hover { color: var(--color-text); border-color: var(--color-primary); }
+    .skills-list { display: flex; flex-direction: column; gap: 8px; }
+    .skill-item {
+      padding: 10px; border-radius: 6px;
+      background: var(--color-bg, #0d1117);
+      border: 1px solid var(--color-border, #30363d);
+      cursor: pointer; transition: border-color 0.15s;
+    }
+    .skill-item:hover { border-color: var(--color-primary, #58a6ff); }
+    .skill-name {
+      font-size: 11px; font-weight: 700;
+      color: var(--color-text, #c9d1d9); margin-bottom: 4px;
+    }
+    .skill-desc {
+      font-size: 10px; color: var(--color-muted, #8b949e);
+      line-height: 1.4;
+    }
+    .skill-empty { font-size: 11px; color: var(--color-muted); text-align: center; padding: 15px 0; }
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .stat-card {
       background: var(--color-bg, #0d1117);
@@ -335,6 +455,7 @@
         <span class="dot" id="oc-dot"></span>
         <span id="oc-text">Opencode...</span>
       </div>
+      <button class="theme-toggle" id="theme-toggle" title="Changer de thème">🌙</button>
     </div>
   </header>
 
@@ -367,16 +488,13 @@
         <!-- TUI zone -->
         <div class="tui-zone" id="tui-zone">
           <div class="tui-header">
-            <div class="tui-header-left">
-              <span class="tui-conn-dot" id="tui-conn-dot"></span>
-              <span class="project-label" id="tui-project-name">—</span>
+            <span class="project-label" id="tui-project-name">—</span>
+            <div style="display:flex;align-items:center;gap:10px;">
               <span class="session-id" id="tui-session-id"></span>
-            </div>
-            <div class="tui-controls">
-              <button type="button" class="tui-ctrl-btn active" id="tui-autoscroll-btn" title="Auto-scroll">↓</button>
-              <button type="button" class="tui-ctrl-btn" id="tui-clear-btn" title="Effacer messages">✕ clear</button>
+              <span class="session-count" id="session-count" title="Voir les sessions">0 sessions</span>
             </div>
           </div>
+          <div class="session-dropdown" id="session-dropdown"></div>
           <div class="tui-messages" id="tui-messages">
             <p class="tui-empty">Aucun message</p>
           </div>
@@ -399,6 +517,10 @@
           <div class="info-content" id="info-content">
             <p class="info-empty">Sélectionne un projet</p>
           </div>
+          <div class="info-section" id="info-skills-section" style="display:none;">
+            <div class="info-section-title">Skills</div>
+            <div class="skills-list" id="skills-list"></div>
+          </div>
         </div>
 
       </div>
@@ -413,6 +535,8 @@
       <div class="spotlight-results" id="spotlight-results"></div>
     </div>
   </div>
+
+  <div class="toast-container" id="toast-container"></div>
 
   <script>
     const srvDot  = document.getElementById('srv-dot');
@@ -432,14 +556,17 @@
     const infoProjectPath  = document.getElementById('info-project-path');
     const infoStatusBadge  = document.getElementById('info-status-badge');
     const infoContent      = document.getElementById('info-content');
-    const tuiConnDot       = document.getElementById('tui-conn-dot');
-    const tuiAutoScrollBtn = document.getElementById('tui-autoscroll-btn');
-    const tuiClearBtn      = document.getElementById('tui-clear-btn');
-    const runBtn           = document.getElementById('run-btn');
+    const sessionCount     = document.getElementById('session-count');
+    const sessionDropdown  = document.getElementById('session-dropdown');
+    const infoSkillsSection = document.getElementById('info-skills-section');
+    const skillsList       = document.getElementById('skills-list');
+    const themeToggle      = document.getElementById('theme-toggle');
 
     let activeId    = null;
     let sessionId   = null;
     let sseSource   = null;
+    let activeProject = null;
+    let allSessions = [];
     let autoScroll  = true;
     let allProjects = [];
     let spotlightFocus = -1;
@@ -556,6 +683,7 @@
     // ── Open project space ──
     async function openProject(project) {
       activeId = project.id;
+      activeProject = project;
 
       document.querySelectorAll('.project-item').forEach(n => n.classList.remove('active'));
       document.querySelector(`.project-item[data-id="${project.id}"]`)?.classList.add('active');
@@ -574,15 +702,37 @@
       tuiInput.value = '';
       if (sseSource) { sseSource.close(); sseSource = null; }
 
-      // Reuse existing session or create new one
-      try {
-        let session = null;
-        const listRes = await fetch(`/api/oc/sessions?directory=${encodeURIComponent(project.path)}`);
-        if (listRes.ok) {
-          const sessions = await listRes.json();
-          if (Array.isArray(sessions) && sessions.length > 0) {
-            session = sessions[0];
+      // Load existing sessions for this project
+      await loadSessions(project);
+
+      // Create session if none exists
+      if (!sessionId) {
+        try {
+          const res = await fetch('/api/oc/sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ directory: project.path, title: project.name })
+          });
+          if (res.ok) {
+            const session = await res.json();
+            sessionId = session?.id ?? null;
+            tuiSess.textContent = sessionId ? `#${sessionId.slice(0,8)}` : '';
+            tuiMessages.innerHTML = '<p class="tui-empty">Prêt — envoie un message</p>';
+            if (sessionId) {
+              loadMessages(sessionId);
+              startSSE();
+            }
+            await loadSessions(project);
+          } else {
+            tuiMessages.innerHTML = '<p class="tui-empty">Erreur connexion opencode</p>';
           }
+        } catch (e) {
+          console.error('session create:', e);
+          showError('Erreur connexion opencode');
+          tuiMessages.innerHTML = '<p class="tui-empty">Erreur connexion opencode</p>';
+        }
+      }
+    }
         }
         if (!session) {
           const createRes = await fetch('/api/oc/sessions', {
@@ -616,7 +766,10 @@
         tuiMessages.innerHTML = '';
         msgs.forEach(m => appendMessage(m.info?.role ?? 'system', extractText(m.parts)));
         scrollMessages();
-      } catch (e) { console.error('loadMessages:', e); }
+      } catch (e) {
+        console.error('loadMessages:', e);
+        showError('Échec chargement messages');
+      }
     }
 
     function extractText(parts) {
@@ -644,14 +797,253 @@
     function renderProjectInfo(project) {
       infoProjectName.textContent = project.name;
       infoProjectPath.textContent = project.path;
-      infoProjectPath.title = project.path;
+      infoProjectPath.title = project.path; // tooltip
+      
+      // Status badge
       const status = project.status || 'active';
       infoStatusBadge.className = `info-status-badge ${status}`;
       infoStatusBadge.textContent = status;
-      runBtn.disabled = false;
-      runBtn.dataset.projectId = project.id;
-      infoContent.innerHTML = '<p class="info-empty">Chargement…</p>';
-      loadInfoContent(project.id, project.path);
+    }
+
+    // ── Load sessions for project ──
+    async function loadSessions(project) {
+      try {
+        const res = await fetch(`/api/oc/sessions?directory=${encodeURIComponent(project.path)}&projectId=${project.id}`);
+        if (!res.ok) {
+          sessionCount.textContent = '0 sessions';
+          return;
+        }
+        const sessions = await res.json();
+        allSessions = Array.isArray(sessions) ? sessions : [];
+        
+        // Update session count badge
+        const count = allSessions.length;
+        sessionCount.textContent = `${count} session${count > 1 ? 's' : ''}`;
+        
+        // Update current session if still valid
+        if (sessionId && !allSessions.find(s => s.id === sessionId)) {
+          // Current session no longer exists, pick first available
+          if (allSessions.length > 0) {
+            switchSession(allSessions[0].id, false);
+          }
+        }
+        
+        // Render dropdown
+        renderSessionDropdown();
+      } catch (e) {
+        console.error('loadSessions:', e);
+        sessionCount.textContent = '0 sessions';
+      }
+    }
+
+    function renderSessionDropdown() {
+      if (!allSessions.length) {
+        sessionDropdown.classList.remove('visible');
+        return;
+      }
+      
+      sessionDropdown.innerHTML = allSessions.map(s => {
+        const isActive = s.id === sessionId;
+        const time = s.lastActivity || s.updatedAt ? new Date(s.lastActivity || s.updatedAt).toLocaleTimeString() : '';
+        const priority = s.priority || 'normal';
+        
+        return `
+          <div class="session-item${isActive ? ' active' : ''}" data-session-id="${esc(s.id)}">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="priority-badge priority-${priority}" title="Priorité: ${priority}"></span>
+              <span class="title">${esc(s.title || 'Session')}</span>
+            </div>
+            <div class="meta">
+              <span>${esc(s.id.slice(0, 8))}</span>
+              <span>${time}</span>
+            </div>
+            <div class="priority-menu">
+              <button class="priority-btn urgent" title="Urgent" data-priority="urgent"></button>
+              <button class="priority-btn high" title="High" data-priority="high"></button>
+              <button class="priority-btn normal" title="Normal" data-priority="normal"></button>
+              <button class="priority-btn low" title="Low" data-priority="low"></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Add click handlers
+      sessionDropdown.querySelectorAll('.session-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+          // Don't switch if clicking priority buttons
+          if ((e.target as HTMLElement).classList.contains('priority-btn')) return;
+          
+          const sid = el.dataset.sessionId;
+          if (sid && sid !== sessionId) {
+            switchSession(sid, true);
+          }
+          sessionDropdown.classList.remove('visible');
+        });
+        
+        // Priority button handlers
+        el.querySelectorAll('.priority-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const sid = el.dataset.sessionId;
+            const priority = (btn as HTMLElement).dataset.priority as any;
+            if (sid && priority) {
+              setSessionPriority(sid, priority);
+            }
+          });
+        });
+      });
+    }
+
+    async function setSessionPriority(sessionId: string, priority: string) {
+      try {
+        await fetch(`/api/oc/sessions/${sessionId}/priority`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ priority })
+        });
+        // Refresh session list
+        if (activeProject) await loadSessions(activeProject);
+      } catch (e) {
+        console.error('setPriority:', e);
+      }
+    }
+
+    async function switchSession(newSessionId, reloadMessages) {
+      sessionId = newSessionId;
+      tuiSess.textContent = `#${sessionId.slice(0, 8)}`;
+      
+      // Update dropdown active state
+      sessionDropdown.querySelectorAll('.session-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.sessionId === sessionId);
+      });
+      
+      if (reloadMessages) {
+        // Close old SSE
+        if (sseSource) { sseSource.close(); sseSource = null; }
+        
+        // Load messages for new session
+        tuiMessages.innerHTML = '<p class="tui-empty">Chargement…</p>';
+        await loadMessages(sessionId);
+        tuiMessages.innerHTML = '';
+        
+        // Start SSE for new session
+        startSSE();
+      }
+    }
+
+    // Toggle dropdown on badge click
+    sessionCount.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sessionDropdown.classList.toggle('visible');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      sessionDropdown.classList.remove('visible');
+    });
+
+    // ── Export execution logs ──
+    document.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('.exec-export');
+      if (!btn) return;
+      const execId = btn.getAttribute('data-exec-id');
+      if (execId) downloadLogs(execId);
+    });
+
+    async function downloadLogs(execId: string) {
+      try {
+        const res = await fetch(`/api/executions/${execId}/logs`);
+        if (!res.ok) throw new Error('Failed to download');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Get filename from Content-Disposition header
+        const disposition = res.headers.get('Content-Disposition');
+        const filename = disposition 
+          ? disposition.match(/filename="(.+)"/)?.[1] ?? `execution-${execId.slice(0,8)}.txt`
+          : `execution-${execId.slice(0,8)}.txt`;
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('downloadLogs:', e);
+      }
+    }
+
+    // ── Load skills list ──
+    async function loadSkills() {
+      try {
+        const res = await fetch('/api/skills');
+        if (!res.ok) return;
+        const skills = await res.json();
+        
+        if (!skills.length) {
+          infoSkillsSection.style.display = 'none';
+          return;
+        }
+        
+        infoSkillsSection.style.display = 'block';
+        skillsList.innerHTML = skills.map(s => `
+          <div class="skill-item">
+            <div class="skill-name">${esc(s.name)}</div>
+            <div class="skill-desc">${esc(s.description || 'Aucune description')}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('loadSkills:', e);
+      }
+    }
+
+    // Load skills on startup
+    loadSkills();
+
+    // ── Theme toggle ──
+    function setTheme(mode) {
+      document.documentElement.setAttribute('data-theme', mode);
+      localStorage.setItem('theme', mode);
+      themeToggle.textContent = mode === 'dark' ? '🌙' : '☀️';
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem('theme') || 'dark';
+      setTheme(saved);
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    initTheme();
+
+    // ── Toast notifications ──
+    function showToast(message, type = 'info', duration = 5000) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <span>${esc(message)}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+      `;
+      container.appendChild(toast);
+      
+      if (duration > 0) {
+        setTimeout(() => toast.remove(), duration);
+      }
+    }
+
+    function showError(message) {
+      showToast(message, 'error', 8000);
+      console.error('[CodeClaw Error]:', message);
+    }
+
+    function showSuccess(message) {
+      showToast(message, 'success', 3000);
     }
 
     async function loadInfoContent(projectId, projectPath) {
@@ -706,6 +1098,7 @@
                   <span>${esc(e.status)}</span>
                   ${e.duration ? `<span>${e.duration}ms</span>` : ''}
                   <span class="exec-time">${new Date(e.startedAt).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</span>
+                  <button class="exec-export" data-exec-id="${esc(e.id)}" title="Exporter logs">↓</button>
                 </div>`).join('')
             }
           </div>`;
@@ -818,7 +1211,10 @@
         const data = await res.json();
         allProjects = data.projects || [];
         renderProjects(allProjects);
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+        showError('Échec chargement projets');
+      }
     }
 
     document.getElementById('add-btn').addEventListener('click', async () => {
@@ -835,7 +1231,10 @@
         document.getElementById('inp-name').value = '';
         document.getElementById('inp-path').value = '';
         document.getElementById('inp-desc').value = '';
+        showSuccess('Projet ajouté');
         loadProjects();
+      } else {
+        showError('Échec ajout projet');
       }
     });
 
@@ -873,8 +1272,23 @@
     checkServer();
     checkOpencode();
     loadProjects();
-    setInterval(checkServer, 15000);
-    setInterval(checkOpencode, 15000);
+    
+    // Adaptive polling — slow down when idle
+    let idleCounter = 0;
+    function adaptivePoll() {
+      checkServer();
+      checkOpencode();
+      idleCounter++;
+      // Poll every 15s normally, every 30s when idle (no user activity)
+      const interval = idleCounter > 4 ? 30000 : 15000;
+      setTimeout(adaptivePoll, interval);
+    }
+    setTimeout(adaptivePoll, 15000);
+    
+    // Reset idle counter on user activity
+    ['click', 'keydown', 'mousemove'].forEach(evt => {
+      document.addEventListener(evt, () => { idleCounter = 0; });
+    });
   </script>
 </body>
 </html>

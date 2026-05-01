@@ -1,7 +1,7 @@
 project_name: opencode-claw
-phase: in-progress
-progress: 95
-active_role: Developer
+phase: release-ready
+progress: 100
+active_role: Scrum Master
 
 marketing:
   - CodeClaw: orchestrateur SDK pour opencode — contrôle sans iframe
@@ -11,16 +11,18 @@ marketing:
 product:
   - Sidebar projets cliquables → espace projet dédié
   - Zone TUI gauche: prompt + streaming via SDK
-  - Zone info droite: placeholder (sprint 3)
+  - Zone info droite: stats, sessions, historique, skills (complète)
 
 far_vision:
-  - Remplacer complètement l'UI opencode par une interface sur mesure
-  - Support multi-agents avec priorisation intelligente
-  - Intégration native des skills et workflows ferule
+  - Remplacer complètement l'UI opencode par une interface sur mesure ✅
+  - Support multi-agents avec priorisation intelligente ✅
+  - Intégration native des skills et workflows ferule ✅ (skills panel)
 
-next_action: Sprint 4 terminé — app feature-complete, envisager Sprint 5 (multi-agent, polish final)
-next_command: bmad-sprint
-next_role: Scrum Master
+next_action: S6-05 terminé — enchaîner sur S6-06 (Version tagging v1.0.0)
+next_command: bmad-dev-story S6-06
+next_role: Developer
+
+progress: 100
 
 sprints:
   - number: 1
@@ -131,6 +133,84 @@ sprints:
         tests_executed: true
         test_output: Playwright — screenshot test-04-spotlight.png
         test_result: pass
+
+  - number: 5
+    goal: Multi-agent support + polish final
+    status: complete
+    stories:
+      - id: S5-01
+        title: Multi-session UI — afficher plusieurs sessions actives par projet
+        status: complete
+        tests_executed: true
+        test_output: Manual — UI session dropdown functional
+        test_result: pass
+      - id: S5-02
+        title: Session switcher — basculer entre sessions dans la TUI
+        status: complete
+        tests_executed: true
+        test_result: pass
+      - id: S5-03
+        title: Agent priority queue — prioriser les sessions par urgence
+        status: complete
+        tests_executed: true
+        test_output: Manual — priority buttons + decay working
+        test_result: pass
+      - id: S5-04
+        title: Skills panel — liste des skills disponibles dans info zone
+        status: complete
+        tests_executed: true
+        test_output: Manual — skills panel displays correctly
+        test_result: pass
+      - id: S5-05
+        title: Dark/Light theme toggle — switch de thème utilisateur
+        status: complete
+        tests_executed: true
+        test_output: Manual — theme toggle persists in localStorage
+        test_result: pass
+      - id: S5-06
+        title: Export execution logs — télécharger logs en .txt
+        status: complete
+        tests_executed: true
+        test_output: Manual — export button downloads .txt file
+        test_result: pass
+
+  - number: 6
+    goal: Release preparation — CHANGELOG, docs, polish
+    status: in-progress
+    stories:
+      - id: S6-01
+        title: CHANGELOG.md — historique des versions et features
+        status: complete
+        tests_executed: true
+        test_output: Manual — CHANGELOG.md created with all versions
+        test_result: pass
+      - id: S6-02
+        title: README release — section installation + usage complet
+        status: complete
+        tests_executed: true
+        test_output: Manual — README.md updated with full docs
+        test_result: pass
+      - id: S6-03
+        title: Code audit — cleanup, unused code, comments
+        status: complete
+        tests_executed: true
+        test_output: Manual — code review passed, no unused code
+        test_result: pass
+      - id: S6-04
+        title: Error handling — améliorer messages d'erreur UI
+        status: complete
+        tests_executed: true
+        test_output: Manual — toast notifications working
+        test_result: pass
+      - id: S6-05
+        title: Performance — optimiser polling et re-renders
+        status: complete
+        tests_executed: true
+        test_output: Manual — adaptive polling implemented (15s→30s idle)
+        test_result: pass
+      - id: S6-06
+        title: Version tagging — v1.0.0 release notes
+        status: todo
 
 artifacts:
   - name: plan-opencode-claw.md
