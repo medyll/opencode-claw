@@ -35,16 +35,18 @@
 
 **Test result:** Multi-session fonctionnel avec switcher, priorité visuelle (4 niveaux), decay auto après 5min, skills panel, toggle thème dark/light, export logs .txt.
 
-### Sprint 6 — Release preparation 🔨
+### Sprint 6 — Release preparation ✅
 - S6-01 CHANGELOG.md ✅
 - S6-02 README release ✅
 - S6-03 Code audit ✅
 - S6-04 Error handling UI ✅
 - S6-05 Performance optimization ✅
-- S6-06 Version tagging v1.0.0 ⬚
+- S6-06 Version tagging v1.0.0 ✅
+
+**Release:** Git tag v1.0.0 créé avec notes de release.
 
 ## Next
 
-**Action:** S6-05 terminé — enchaîner sur S6-06 (Version tagging v1.0.0)  
-**Command:** `bmad-dev-story S6-06`  
-**Role:** Developer
+**Action:** Sprint 6 terminé — Projet v1.0.0 released ✅  
+**Command:** `bmad-status`  
+**Role:** Scrum Master
