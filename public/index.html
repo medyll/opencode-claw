@@ -697,6 +697,7 @@
             body: JSON.stringify({ directory: project.path, title: project.name })
           });
           if (res.ok) {
+            console.log(res)
             const session = await res.json();
             sessionId = session?.id ?? null;
             tuiSess.textContent = sessionId ? `#${sessionId.slice(0,8)}` : '';
