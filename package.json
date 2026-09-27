@@ -17,16 +17,16 @@
   "author": "Mydde",
   "license": "ISC",
   "dependencies": {
-    "@medyll/css-base": "^0.6.0",
-    "@opencode-ai/sdk": "^1.14.19",
+    "@medyll/css-base": "^0.6.7",
+    "@opencode-ai/sdk": "^1.18.32",
     "express": "^5.2.1",
     "send": "^1.2.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.20.4",
     "ts-node": "^10.9.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5.6.3"
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
   }
 }
