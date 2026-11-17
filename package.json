@@ -18,7 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "@medyll/css-base": "^0.6.7",
-    "@opencode-ai/sdk": "^1.19.5",
+    "@opencode-ai/sdk": "^1.19.6",
     "express": "^5.3.0",
     "send": "^1.2.1"
   },
